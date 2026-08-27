@@ -1,0 +1,32 @@
+{
+  "name": "sloppish-to-english",
+  "version": "0.1.0",
+  "description": "Rewrites Codex response drafts in plain English before they are shown.",
+  "author": {
+    "name": "Dushyant Garg"
+  },
+  "repository": "https://github.com/fraction12/sloppish-to-english",
+  "license": "MIT",
+  "keywords": [
+    "plain-language",
+    "rewrite",
+    "codex",
+    "hooks",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Sloppish to English",
+    "shortDescription": "Plain-English rewrite before Codex replies appear.",
+    "longDescription": "Uses a bundled local tool and a separate, read-only Codex CLI call to rewrite each completed response draft in plain language before the assistant message is shown. Translator failures fall back to the original draft.",
+    "developerName": "Dushyant Garg",
+    "category": "Productivity",
+    "capabilities": [
+      "Hooks",
+      "MCP",
+      "Codex CLI"
+    ],
+    "websiteURL": "https://github.com/fraction12/sloppish-to-english",
+    "defaultPrompt": "Explain how the plain-language rewrite plugin works."
+  }
+}

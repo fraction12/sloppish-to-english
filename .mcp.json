@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "sloppish-translator": {
+      "command": "python3",
+      "args": ["-B", "./scripts/mcp_server.py"],
+      "cwd": ".",
+      "startup_timeout_sec": 10,
+      "tool_timeout_sec": 150
+    }
+  }
+}

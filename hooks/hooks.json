@@ -1,0 +1,16 @@
+{
+  "description": "Run completed Codex drafts through a plain-language translator.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/scripts/user_prompt_submit.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

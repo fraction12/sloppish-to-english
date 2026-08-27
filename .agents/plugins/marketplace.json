@@ -1,0 +1,20 @@
+{
+  "name": "sloppish-to-english",
+  "interface": {
+    "displayName": "Sloppish to English"
+  },
+  "plugins": [
+    {
+      "name": "sloppish-to-english",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
