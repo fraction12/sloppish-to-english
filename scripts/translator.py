@@ -14,6 +14,7 @@ import tempfile
 
 PLUGIN_ROOT = Path(os.environ.get("PLUGIN_ROOT", Path(__file__).resolve().parents[1]))
 DEFAULT_PROMPT = PLUGIN_ROOT / "prompts" / "plain-language.txt"
+TLDR_PROMPT = PLUGIN_ROOT / "prompts" / "tldr.txt"
 TRANSLATOR_INSTRUCTIONS = PLUGIN_ROOT / "prompts" / "translator-agent.txt"
 VALID_EFFORTS = {"low", "medium", "high", "xhigh"}
 
@@ -110,8 +111,10 @@ def read_prompt(user_question: str | None = None) -> str | None:
             prompt = ""
         custom_prompt = bool(prompt)
     if not prompt:
+        style = (setting("STYLE", "") or "").strip().lower()
+        prompt_path = TLDR_PROMPT if style == "tldr" else DEFAULT_PROMPT
         try:
-            prompt = DEFAULT_PROMPT.read_text(encoding="utf-8").strip()
+            prompt = prompt_path.read_text(encoding="utf-8").strip()
         except OSError:
             return None
 

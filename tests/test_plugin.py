@@ -18,6 +18,7 @@ HOOK = PLUGIN_ROOT / "scripts" / "user_prompt_submit.py"
 MCP_SERVER = PLUGIN_ROOT / "scripts" / "mcp_server.py"
 MCP_CONFIG = PLUGIN_ROOT / ".mcp.json"
 FAKE_CODEX = PLUGIN_ROOT / "tests" / "fake_codex.py"
+TRANSLATOR_INSTRUCTIONS = PLUGIN_ROOT / "prompts" / "translator-agent.txt"
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
 from translator import (  # noqa: E402
@@ -289,6 +290,43 @@ class McpServerTests(unittest.TestCase):
         self.assertFalse(result["isError"])
         self.assertEqual(result["content"][0]["text"], draft)
 
+    def test_tldr_style_keeps_protected_code_and_targets_editable_prose(self) -> None:
+        fence = "```python\nprint(\"keep exactly\")\n```"
+        draft = ("This long explanation repeats secondary background detail. " * 12) + fence
+        with tempfile.TemporaryDirectory() as temp_dir:
+            args_file = Path(temp_dir) / "args.json"
+            stdin_file = Path(temp_dir) / "stdin.txt"
+            responses = self.run_server(
+                [
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 8,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "rewrite_response",
+                            "arguments": {"draft": draft},
+                        },
+                    }
+                ],
+                SLOPPISH_STYLE="tldr",
+                FAKE_CODEX_ECHO="1",
+                FAKE_CODEX_REPLACE_FROM="repeats secondary background detail",
+                FAKE_CODEX_REPLACE_TO="is shorter",
+                FAKE_CODEX_ARGS_FILE=str(args_file),
+                FAKE_CODEX_STDIN_FILE=str(stdin_file),
+            )
+            command = json.loads(args_file.read_text(encoding="utf-8"))
+            rewriter_input = stdin_file.read_text(encoding="utf-8")
+
+        result = responses[0]["result"]
+        self.assertFalse(result["isError"])
+        self.assertIn(fence, result["content"][0]["text"])
+        self.assertNotIn(fence, rewriter_input)
+        self.assertIn("half its length or less", command[-1])
+        self.assertIn("editable prose", command[-1])
+        self.assertIn("Leave fenced code blocks unchanged", command[-1])
+        self.assertNotIn("Omit fenced code blocks", command[-1])
+
 
 class TranslatorCommandTests(unittest.TestCase):
     def test_uses_codex_default_model_with_low_reasoning(self) -> None:
@@ -324,14 +362,48 @@ class TranslatorCommandTests(unittest.TestCase):
         swapped = swapped.replace(second, first, 1).replace("@@TEMP@@", second, 1)
         self.assertIsNone(restore_message(swapped, protected))
 
-    def test_prompt_uses_original_plain_language_rules(self) -> None:
+    def test_default_prompt_requires_a_meaningful_structural_rewrite(self) -> None:
         prompt = read_prompt("What changed?")
         self.assertIsNotNone(prompt)
         assert prompt is not None
         self.assertIn("much simpler, plain language", prompt)
         self.assertIn("short sentences and everyday words", prompt)
         self.assertIn("What changed?", prompt)
-        self.assertIn("return it unchanged", prompt)
+        self.assertIn("20% to 35% shorter", prompt)
+        self.assertIn("Rewrite sentence structure", prompt)
+        self.assertIn("material facts", prompt)
+        self.assertIn("Rebuild the prose", prompt)
+        self.assertIn("style or length instructions", prompt)
+        self.assertNotIn("return it unchanged", prompt)
+
+        instructions = TRANSLATOR_INSTRUCTIONS.read_text(encoding="utf-8")
+        self.assertIn("meaningful rewrite", instructions)
+        self.assertNotIn("conservative", instructions.lower())
+        self.assertNotIn("unchanged", instructions.lower())
+
+    def test_tldr_style_uses_the_short_summary_prompt(self) -> None:
+        with patch.dict(os.environ, {"SLOPPISH_STYLE": "tldr"}, clear=False):
+            prompt = read_prompt("What changed?")
+        self.assertIsNotNone(prompt)
+        assert prompt is not None
+        self.assertIn("half its length or less", prompt)
+        self.assertIn("secondary detail", prompt)
+        self.assertIn("What changed?", prompt)
+
+    def test_custom_prompt_wins_over_tldr_style(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            custom = Path(temp_dir) / "custom.txt"
+            custom.write_text("Use my exact custom rewrite policy.", encoding="utf-8")
+            with patch.dict(
+                os.environ,
+                {
+                    "SLOPPISH_STYLE": "tldr",
+                    "SLOPPISH_PROMPT_FILE": str(custom),
+                },
+                clear=False,
+            ):
+                prompt = read_prompt()
+        self.assertEqual(prompt, "Use my exact custom rewrite policy.")
 
     def test_bad_custom_prompt_path_falls_back_to_default(self) -> None:
         with patch.dict(

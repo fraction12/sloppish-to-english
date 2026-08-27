@@ -46,6 +46,7 @@ The plugin reads these optional environment variables from the Codex process:
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `SLOPPISH_ENABLED` | `1` | Set to `0` to skip rewrites. |
+| `SLOPPISH_STYLE` | plain language | Set to `tldr` for a summary that targets half the editable prose or less. Protected code and metadata remain exact. |
 | `SLOPPISH_CODEX_MODEL` | Codex default | Use a specific model for the rewrite call. |
 | `SLOPPISH_CODEX_EFFORT` | `low` | Set the rewrite reasoning effort. |
 | `SLOPPISH_TIMEOUT_SECONDS` | `45` | Set the child timeout, capped at 145 seconds. |
