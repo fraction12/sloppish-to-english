@@ -4,6 +4,12 @@ A Codex plugin that rewrites completed assistant responses in plain language bef
 
 The plugin uses a local MCP tool and a separate `codex exec` call with your existing Codex login. It does not need another API key or a local model.
 
+## TLDR comparison
+
+With `SLOPPISH_STYLE=tldr`, the translator targets half the editable prose or less. This comparison omits identical code blocks so the difference in prose is easy to see. The plugin keeps protected code unchanged.
+
+![Regular Codex response compared with a Sloppish Translation](assets/sloppish-tldr-comparison.png)
+
 ## Requirements
 
 - Codex CLI, signed in
